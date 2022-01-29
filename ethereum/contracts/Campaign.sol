@@ -1,20 +1,19 @@
-pragma solidity ^0.8.17;
-// import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-// import "@openzeppelin/contracts/token/ERC721/extensions/CampaignFactory.sol";
-// import "@openzeppelin/contracts/utils/Counters.sol";
+// SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.11;
+
 /*
     Contract CampaignFactory to create new campaigns and
     store addresses of the created campaigns
 */
 contract CampaignFactory {
     address[] public deployedCampaigns;
-    
-    function createCampaign(string campaignName) public {
-        address newCampaign = new Campaign(campaignName, msg.sender);
-        deployedCampaigns.push(newCampaign);
+
+    function createCampaign(string calldata campaignName) public {
+        Campaign newCampaign = new Campaign(campaignName, msg.sender);
+        deployedCampaigns.push(address(newCampaign));
     }
-    
-    function getDeployedCampaigns() public view returns(address[]) {
+
+    function getDeployedCampaigns() public view returns (address[] memory) {
         return deployedCampaigns;
     }
 }
@@ -26,46 +25,50 @@ contract CampaignFactory {
 contract Campaign {
     // voter model
     struct Voter {
-        uint uid;   // unique id
+        uint256 uid; // unique id
         string fullName;
         string location;
         bool voted;
-        uint cid;
+        uint256 cid;
     }
-    
+
     // candidate model
     struct Candidate {
-        uint uid;   // unique id
+        uint256 uid; // unique id
         string fullName;
         string location;
-        uint votes;
+        uint256 votes;
     }
-    
+
     address public manager; // election manager private key address
-    string public name;     // campaign name
+    string public name; // campaign name
 
-    Voter[] public voters;  // array of voters
-    uint[] public vids;     // array of voter ids for lookup
+    Voter[] public voters; // array of voters
+    uint256[] public vids; // array of voter ids for lookup
 
-    Candidate[] public candidates;  // array of candidates
-    uint[] public cids;             // array of candidate ids for lookup
+    Candidate[] public candidates; // array of candidates
+    uint256[] public cids; // array of candidate ids for lookup
 
-    uint public totalVotes;         // total votes polled
-    bool public complete;           // campaign status
+    uint256 public totalVotes; // total votes polled
+    bool public complete; // campaign status
 
-    uint public winner;             // winner uid
-    
-    mapping(uint => uint) public voterIndex;
-    mapping(uint => uint) public candidateIndex;
-    
+    uint256 public winner; // winner uid
+
+    mapping(uint256 => uint256) public voterIndex;
+    mapping(uint256 => uint256) public candidateIndex;
+
     // create campaign function
-    function Campaign(string campaignName, address sender) public {
+    constructor(string memory campaignName, address sender) {
         manager = sender;
         name = campaignName;
     }
-    
+
     // register a new voter function
-    function registerVoter(uint uid, string fullName, string location) public {
+    function registerVoter(
+        uint256 uid,
+        string calldata fullName,
+        string calldata location
+    ) public {
         Voter memory newVoter = Voter({
             uid: uid,
             fullName: fullName,
@@ -73,28 +76,32 @@ contract Campaign {
             voted: false,
             cid: 0
         });
-        
+
         voters.push(newVoter);
         vids.push(uid);
-        voterIndex[uid] = vids.length-1;
+        voterIndex[uid] = vids.length - 1;
     }
-    
+
     // register a new candidate function
-    function registerCandidate(uint uid, string fullName, string location) public {
+    function registerCandidate(
+        uint256 uid,
+        string calldata fullName,
+        string calldata location
+    ) public {
         Candidate memory newCandidate = Candidate({
             uid: uid,
             fullName: fullName,
             location: location,
             votes: 0
         });
-        
+
         candidates.push(newCandidate);
         cids.push(uid);
-        candidateIndex[uid] = cids.length-1;
+        candidateIndex[uid] = cids.length - 1;
     }
 
-    // poll vote function    
-    function pollVote(uint vid, uint cid) public {
+    // poll vote function
+    function pollVote(uint256 vid, uint256 cid) public {
         Voter storage voter = voters[voterIndex[vid]];
         //check if user already voted
         require(!voter.voted);
@@ -105,71 +112,75 @@ contract Campaign {
         // increase candidate vote count
         Candidate storage candidate = candidates[candidateIndex[cid]];
         candidate.votes++;
-        
+
         // increase total vote count
         totalVotes++;
     }
-    
+
     // declare the campaign result
     function declareResult() public restricted {
         require(msg.sender == manager);
         require(!complete);
         // close the poll
         complete = true;
-        
-        uint max = 0;
-        for (uint i=0; i<candidates.length; i++) {
+
+        uint256 max = 0;
+        for (uint256 i = 0; i < candidates.length; i++) {
             if (candidates[i].votes > max) {
                 max = candidates[i].votes;
                 winner = candidates[i].uid;
             }
         }
     }
-    
+
     // get result summary
-    function getResult() public view returns(
-        uint, uint, uint
-        ) {
-        return (
-            totalVotes, 
-            candidates[candidateIndex[winner]].votes, 
-            winner
-        );    
+    function getResult()
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        return (totalVotes, candidates[candidateIndex[winner]].votes, winner);
     }
-    
+
     // get campaign summary
-    function getSummary() public view returns(
-        uint, uint, uint
-        ) {
-        return (
-            voters.length, 
-            candidates.length, 
-            totalVotes
-        );    
+    function getSummary()
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        return (voters.length, candidates.length, totalVotes);
     }
 
     // get total registered voters count
-    function getVotersCount() public view returns(uint) {
+    function getVotersCount() public view returns (uint256) {
         return voters.length;
     }
 
     // get total registered candidate count
-    function getCandidatesCount() public view returns(uint) {
+    function getCandidatesCount() public view returns (uint256) {
         return candidates.length;
     }
 
     // get unique ids of all registered voters
-    function getVoterIds() public view returns(uint[]) {
+    function getVoterIds() public view returns (uint256[] memory) {
         return vids;
     }
 
     // get unique ids of all registered candidates
-    function getCandidateIds() public view returns(uint[]) {
+    function getCandidateIds() public view returns (uint256[] memory) {
         return cids;
     }
-    
+
     // modifier to restrict method calling only by the campaign manager
-    modifier restricted {
+    modifier restricted() {
         require(msg.sender == manager);
         _;
     }

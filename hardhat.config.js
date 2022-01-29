@@ -22,8 +22,8 @@ module.exports = {
     hardhat: {
       chainId: 137
      },
-    mainnet: {
-      url: "https://mainnet.infura.io/v3/8fac68ce2e8147f8abe4178ee2b8e322",
+    rinkeby: {
+      url: "https://rinkeby.infura.io/v3/8fac68ce2e8147f8abe4178ee2b8e322",
       accounts : [privateKey]
      }
    },

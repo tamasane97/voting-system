@@ -1,14 +1,15 @@
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.11;
 
 contract CampaignFactory {
     address[] public deployedCampaigns;
     
-    function createCampaign(string campaignName) public {
-        address newCampaign = new Campaign(campaignName, msg.sender);
-        deployedCampaigns.push(newCampaign);
+    function createCampaign(string calldata campaignName) public {
+        Campaign newCampaign = new Campaign(campaignName, msg.sender);
+        deployedCampaigns.push(address(newCampaign));
     }
     
-    function getDeployedCampaigns() public view returns(address[]) {
+    function getDeployedCampaigns() public view returns(address[] memory) {
         return deployedCampaigns;
     }
 }
@@ -42,12 +43,12 @@ contract Campaign {
     mapping(uint => uint) public voterIndex;
     mapping(uint => string) public candidateIndex;
     
-    function Campaign(string campaignName, address sender) public {
+    constructor(string memory campaignName, address sender) {
         manager = sender;
         name = campaignName;
     }
     
-    function registerVoter(uint aadhaar, string fullName, string location) public {
+    function registerVoter(uint aadhaar, string calldata fullName, string calldata location) public {
         Voter memory newVoter = Voter({
             aadhaar: aadhaar,
             fullName: fullName,
@@ -60,7 +61,7 @@ contract Campaign {
         vids.push(aadhaar);
     }
     
-    function registerCandidate(uint aadhaar, string fullName, string location) public {
+    function registerCandidate(uint aadhaar, string calldata fullName, string calldata location) public {
         Candidate memory newCandidate = Candidate({
             aadhaar: aadhaar,
             fullName: fullName,
@@ -136,11 +137,11 @@ contract Campaign {
         return candidates.length;
     }
 
-    function getVoterIds() public view returns(uint[]) {
+    function getVoterIds() public view returns(uint[] memory) {
         return vids;
     }
 
-    function getCandidateIds() public view returns(uint[]) {
+    function getCandidateIds() public view returns(uint[] memory) {
         return cids;
     }
     
